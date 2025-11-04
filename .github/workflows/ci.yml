@@ -1,0 +1,46 @@
+name: CI Build & Test
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+      - "hotfix/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libcunit1 libcunit1-doc libcunit1-dev
+
+      - name: Run Build compile script
+        run: |
+          chmod +x .build/compile.sh
+          ./.build/compile.sh
+
+      - name: Run unit tests
+        run: |
+          if [ -f ./test_dns_parser ]; then
+            ./test_dns_parser
+          else
+            echo "Test binary not found!"
+            exit 1
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dns_server
+            test_dns_parser
